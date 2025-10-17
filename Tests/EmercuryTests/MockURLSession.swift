@@ -1,14 +1,16 @@
 import XCTest
 @testable import Emercury
-
 import Foundation
 
 final class MockURLSession: URLSessionProtocol {
     var data: Data?
     var response: URLResponse?
     var error: Error?
+    var lastRequest: URLRequest?
     
     func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        lastRequest = request
+        
         if let error = error {
             throw error
         }
@@ -17,8 +19,4 @@ final class MockURLSession: URLSessionProtocol {
         }
         return (data, response)
     }
-}
-
-struct TestResponse: Codable {
-    let message: String
 }

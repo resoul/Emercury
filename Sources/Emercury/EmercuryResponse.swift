@@ -9,14 +9,13 @@ public struct EmercuryResponse<T: Decodable>: Decodable {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        if let val = try? container.decodeIfPresent(T.self, forKey: .automation) {
-            value = val
-        } else if let val = try? container.decodeIfPresent(T.self, forKey: .audiences) {
-            print("debug: val is obj")
-            self.value = val
-        } else if let array = try? container.decodeIfPresent([T].self, forKey: .audiences) {
+        if T.self == GetAudiencesResponse.self {
             print("debug: val is arr")
+            let array = try? container.decodeIfPresent([T].self, forKey: .audiences) ?? []
             self.value = array as? T
+        } else if T.self == StartAutomationResponse.self {
+            print("debug: val is obj")
+            value = try? container.decodeIfPresent(T.self, forKey: .automation)
         } else {
             self.value = nil
         }

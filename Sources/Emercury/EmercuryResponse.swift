@@ -11,8 +11,7 @@ public struct EmercuryResponse<T: Decodable>: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if T.self == GetAudiencesResponse.self {
             print("debug: val is arr")
-            let array = try? container.decodeIfPresent([T].self, forKey: .audiences) ?? []
-            self.value = array as? T
+            self.value = try? container.decodeIfPresent(T.self, forKey: .audiences)
         } else if T.self == StartAutomationResponse.self {
             print("debug: val is obj")
             value = try? container.decodeIfPresent(T.self, forKey: .automation)

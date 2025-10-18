@@ -1,4 +1,3 @@
-
 public extension EmercuryRequest {
     static func startAutomation(campaignID: String, email: String) -> EmercuryRequest {
         var params: [String: String] = [

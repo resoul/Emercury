@@ -1,4 +1,3 @@
-
 public extension EmercuryRequest {
     static func getAudiences(includeSegments: Bool = false) -> EmercuryRequest {
         var params: [String: String] = [

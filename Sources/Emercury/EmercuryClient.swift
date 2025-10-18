@@ -26,7 +26,7 @@ public final class EmercuryClient {
     
     public func execute<T: Decodable>(
         request: EmercuryRequest
-    ) async throws -> EmercuryResponse<T> {
+    ) async throws -> T {
         let urlRequest = try buildURLRequest(for: request)
         let (data, response) = try await session.data(for: urlRequest)
         
@@ -37,13 +37,9 @@ public final class EmercuryClient {
         guard (200...299).contains(httpResponse.statusCode) else {
             throw EmercuryError.httpError(statusCode: httpResponse.statusCode)
         }
-        
-        if let s = String(data: data, encoding: .utf8) {
-            print("debug:", s)
-        }
 
         do {
-            return try JSONDecoder().decode(EmercuryResponse<T>.self, from: data)
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
             if let apiError = try? JSONDecoder().decode(EmercuryErrorResponse.self, from: data) {
                 throw EmercuryError.apiError(apiError)
@@ -80,6 +76,6 @@ public final class EmercuryClient {
 
 public extension EmercuryClient {
     func execute(request: EmercuryRequest) async throws {
-        let _: EmercuryResponse<EmptyResponse> = try await execute(request: request)
+        let _: EmptyResponse = try await execute(request: request)
     }
 }

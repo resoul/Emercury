@@ -14,21 +14,36 @@ final class EmercuryRequestTests: XCTestCase {
         XCTAssertEqual(request.parameters["key2"], "value2")
     }
     
-    func testGetSubscriberRequest() {
-        let request = EmercuryRequest.getSubscriber(email: "test@example.com")
+    func testRequestWithEmptyParameters() {
+        let request = EmercuryRequest(method: "testMethod", parameters: [:])
         
-        XCTAssertEqual(request.method, "getSubscriber")
-        XCTAssertEqual(request.parameters["email"], "test@example.com")
+        XCTAssertEqual(request.method, "testMethod")
+        XCTAssertEqual(request.parameters["method"], "testMethod")
+        XCTAssertEqual(request.parameters.count, 1)
     }
     
-    func testUpdateSubscriberRequest() {
-        let request = EmercuryRequest.updateSubscriber(
-            email: "test@example.com",
-            fields: ["status": "active"]
+    func testGetAudiencesRequestBuilder() {
+        let request = EmercuryRequest.getAudiences(includeSegments: true)
+        
+        XCTAssertEqual(request.method, "GetAudiences")
+        XCTAssertEqual(request.parameters["include_segments"], "true")
+    }
+    
+    func testGetSubscribersRequestBuilder() {
+        let request = EmercuryRequest.getSubscribers(audienceId: 789)
+        
+        XCTAssertEqual(request.method, "GetSubscribers")
+        XCTAssertEqual(request.parameters["audience_id"], "789")
+    }
+    
+    func testStartAutomationRequestBuilder() {
+        let request = EmercuryRequest.startAutomation(
+            campaignID: "campaign123",
+            email: "test@example.com"
         )
         
-        XCTAssertEqual(request.method, "updateSubscriber")
+        XCTAssertEqual(request.method, "startAutomation")
+        XCTAssertEqual(request.parameters["campaign_id"], "campaign123")
         XCTAssertEqual(request.parameters["email"], "test@example.com")
-        XCTAssertEqual(request.parameters["status"], "active")
     }
 }

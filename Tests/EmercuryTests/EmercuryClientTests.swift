@@ -21,11 +21,12 @@ final class EmercuryClientTests: XCTestCase {
         super.tearDown()
     }
     
-    func testExecuteRequestSuccess() async throws {
-        // Создаем ответ в формате, который ожидает EmercuryResponse
+    // MARK: - StartAutomation Tests
+    
+    func testStartAutomationSuccess() async throws {
         let responseDict: [String: Any] = [
             "automation": [
-                "message": "success"
+                "message": "Automation started successfully"
             ]
         ]
         
@@ -39,12 +40,132 @@ final class EmercuryClientTests: XCTestCase {
             headerFields: nil
         )
         
-        let request = EmercuryRequest(method: "startAutomation", parameters: [:])
-        let response: EmercuryResponse<StartAutomationResponse> = try await client.execute(request: request)
+        let request = EmercuryRequest.startAutomation(
+            campaignID: "123",
+            email: "user@example.com"
+        )
+        let response: StartAutomationResponse = try await client.execute(request: request)
         
-        XCTAssertNotNil(response.value)
-        XCTAssertEqual(response.value?.message, "success")
+        XCTAssertEqual(response.automation.message, "Automation started successfully")
     }
+    
+    func testStartAutomationRequest() {
+        let request = EmercuryRequest.startAutomation(
+            campaignID: "123",
+            email: "user@example.com"
+        )
+        
+        XCTAssertEqual(request.method, "startAutomation")
+        XCTAssertEqual(request.parameters["campaign_id"], "123")
+        XCTAssertEqual(request.parameters["email"], "user@example.com")
+        XCTAssertEqual(request.parameters["method"], "startAutomation")
+    }
+    
+    // MARK: - GetAudiences Tests
+    
+    func testGetAudiencesSuccess() async throws {
+        let responseDict: [String: Any] = [
+            "audiences": [
+                [
+                    "id": "1",
+                    "name": "Test Audience",
+                    "size": "100",
+                    "subscribers_count": "95",
+                    "unsubscribed": "5",
+                    "status": "active",
+                    "is_segment": "0"
+                ],
+                [
+                    "id": "2",
+                    "name": "VIP List",
+                    "size": "50",
+                    "subscribers_count": "48",
+                    "unsubscribed": "2",
+                    "status": "active",
+                    "is_segment": "1"
+                ]
+            ]
+        ]
+        
+        let jsonData = try JSONSerialization.data(withJSONObject: responseDict, options: [])
+        
+        mockSession.data = jsonData
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "https://api.emercury.net/api-json.php")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let request = EmercuryRequest.getAudiences(includeSegments: true)
+        let response: GetAudiencesResponse = try await client.execute(request: request)
+        
+        XCTAssertEqual(response.audiences.count, 2)
+        XCTAssertEqual(response.audiences[0].id, "1")
+        XCTAssertEqual(response.audiences[0].name, "Test Audience")
+        XCTAssertEqual(response.audiences[0].size, "100")
+        XCTAssertEqual(response.audiences[0].subscribersCount, "95")
+        XCTAssertEqual(response.audiences[1].isSegment, "1")
+    }
+    
+    func testGetAudiencesRequest() {
+        let request = EmercuryRequest.getAudiences(includeSegments: true)
+        
+        XCTAssertEqual(request.method, "GetAudiences")
+        XCTAssertEqual(request.parameters["include_segments"], "true")
+        XCTAssertEqual(request.parameters["method"], "GetAudiences")
+    }
+    
+    func testGetAudiencesRequestWithoutSegments() {
+        let request = EmercuryRequest.getAudiences(includeSegments: false)
+        
+        XCTAssertEqual(request.parameters["include_segments"], "false")
+    }
+    
+    // MARK: - GetSubscribers Tests
+    
+    func testGetSubscribersSuccess() async throws {
+        let responseDict: [String: Any] = [
+            "subscribers": [
+                [
+                    "email": "user1@example.com",
+                    "audience_name": "Test Audience"
+                ],
+                [
+                    "email": "user2@example.com",
+                    "audience_name": "Test Audience"
+                ]
+            ]
+        ]
+        
+        let jsonData = try JSONSerialization.data(withJSONObject: responseDict, options: [])
+        
+        mockSession.data = jsonData
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "https://api.emercury.net/api-json.php")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let request = EmercuryRequest.getSubscribers(audienceId: 123)
+        let response: GetSubscribersResponse = try await client.execute(request: request)
+        
+        XCTAssertEqual(response.subscribers.count, 2)
+        XCTAssertEqual(response.subscribers[0].email, "user1@example.com")
+        XCTAssertEqual(response.subscribers[0].audienceName, "Test Audience")
+        XCTAssertEqual(response.subscribers[1].email, "user2@example.com")
+    }
+    
+    func testGetSubscribersRequest() {
+        let request = EmercuryRequest.getSubscribers(audienceId: 456)
+        
+        XCTAssertEqual(request.method, "GetSubscribers")
+        XCTAssertEqual(request.parameters["audience_id"], "456")
+        XCTAssertEqual(request.parameters["method"], "GetSubscribers")
+    }
+    
+    // MARK: - Error Handling Tests
     
     func testExecuteRequestHTTPError() async {
         mockSession.data = Data()
@@ -58,7 +179,7 @@ final class EmercuryClientTests: XCTestCase {
         let request = EmercuryRequest(method: "testMethod", parameters: [:])
         
         do {
-            let _: EmercuryResponse<StartAutomationResponse> = try await client.execute(request: request)
+            let _: StartAutomationResponse = try await client.execute(request: request)
             XCTFail("Expected error to be thrown")
         } catch let error as EmercuryError {
             if case .httpError(let statusCode) = error {
@@ -91,7 +212,7 @@ final class EmercuryClientTests: XCTestCase {
         let request = EmercuryRequest(method: "testMethod", parameters: [:])
         
         do {
-            let _: EmercuryResponse<StartAutomationResponse> = try await client.execute(request: request)
+            let _: StartAutomationResponse = try await client.execute(request: request)
             XCTFail("Expected error to be thrown")
         } catch let error as EmercuryError {
             if case .apiError(let apiError) = error {
@@ -104,62 +225,54 @@ final class EmercuryClientTests: XCTestCase {
         }
     }
     
-    func testStartAutomationRequest() {
-        let request = EmercuryRequest.startAutomation(
-            campaignID: "123",
-            email: "user@example.com"
-        )
+    func testInvalidResponseError() async {
+        mockSession.data = Data()
+        mockSession.response = URLResponse()
         
-        XCTAssertEqual(request.method, "startAutomation")
-        XCTAssertEqual(request.parameters["campaign_id"], "123")
-        XCTAssertEqual(request.parameters["email"], "user@example.com")
-        XCTAssertEqual(request.parameters["method"], "startAutomation")
+        let request = EmercuryRequest(method: "testMethod", parameters: [:])
+        
+        do {
+            let _: StartAutomationResponse = try await client.execute(request: request)
+            XCTFail("Expected error to be thrown")
+        } catch let error as EmercuryError {
+            if case .invalidResponse = error {
+                // Success
+            } else {
+                XCTFail("Expected invalidResponse error, got: \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
+        }
     }
     
-    func testStartAutomationWithAdditionalParams() {
-        let request = EmercuryRequest.startAutomation(
-            campaignID: "123",
-            email: "user@example.com",
-            additionalParams: ["custom_field": "custom_value"]
+    func testDecodingFailedError() async {
+        let invalidJson = "invalid json".data(using: .utf8)!
+        
+        mockSession.data = invalidJson
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "https://api.emercury.net/api-json.php")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
         )
         
-        XCTAssertEqual(request.parameters["custom_field"], "custom_value")
+        let request = EmercuryRequest(method: "testMethod", parameters: [:])
+        
+        do {
+            let _: StartAutomationResponse = try await client.execute(request: request)
+            XCTFail("Expected error to be thrown")
+        } catch let error as EmercuryError {
+            if case .decodingFailed = error {
+                // Success
+            } else {
+                XCTFail("Expected decodingFailed error, got: \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
+        }
     }
     
-    func testAddSubscriberRequest() {
-        let request = EmercuryRequest.addSubscriber(
-            email: "user@example.com",
-            listID: "456",
-            fields: ["first_name": "John", "last_name": "Doe"]
-        )
-        
-        XCTAssertEqual(request.method, "addSubscriber")
-        XCTAssertEqual(request.parameters["email"], "user@example.com")
-        XCTAssertEqual(request.parameters["list_id"], "456")
-        XCTAssertEqual(request.parameters["first_name"], "John")
-        XCTAssertEqual(request.parameters["last_name"], "Doe")
-        XCTAssertEqual(request.parameters["method"], "addSubscriber")
-    }
-    
-    func testGetSubscriberRequest() {
-        let request = EmercuryRequest.getSubscriber(email: "test@example.com")
-        
-        XCTAssertEqual(request.method, "getSubscriber")
-        XCTAssertEqual(request.parameters["email"], "test@example.com")
-        XCTAssertEqual(request.parameters["method"], "getSubscriber")
-    }
-    
-    func testUpdateSubscriberRequest() {
-        let request = EmercuryRequest.updateSubscriber(
-            email: "test@example.com",
-            fields: ["status": "active"]
-        )
-        
-        XCTAssertEqual(request.method, "updateSubscriber")
-        XCTAssertEqual(request.parameters["email"], "test@example.com")
-        XCTAssertEqual(request.parameters["status"], "active")
-        XCTAssertEqual(request.parameters["method"], "updateSubscriber")
-    }
+    // MARK: - Request Building Tests
     
     func testBuildURLRequestFormat() async throws {
         let responseDict: [String: Any] = [
@@ -179,7 +292,7 @@ final class EmercuryClientTests: XCTestCase {
         )
         
         let request = EmercuryRequest(method: "testMethod", parameters: ["param1": "value1"])
-        let _: EmercuryResponse<StartAutomationResponse> = try await client.execute(request: request)
+        let _: StartAutomationResponse = try await client.execute(request: request)
         
         XCTAssertNotNil(mockSession.lastRequest)
         XCTAssertEqual(mockSession.lastRequest?.httpMethod, "POST")
@@ -192,10 +305,10 @@ final class EmercuryClientTests: XCTestCase {
         }
     }
     
+    // MARK: - Void Response Tests
+    
     func testExecuteVoidRequest() async throws {
-        let responseDict: [String: Any] = [
-            "automation": [:]
-        ]
+        let responseDict: [String: Any] = [:]
         
         let jsonData = try JSONSerialization.data(withJSONObject: responseDict, options: [])
         
@@ -213,20 +326,52 @@ final class EmercuryClientTests: XCTestCase {
         try await client.execute(request: request)
     }
     
-    func testInvalidResponseError() async {
+    // MARK: - HTTP Status Code Tests
+    
+    func testHTTPStatusCode500() async {
         mockSession.data = Data()
-        mockSession.response = URLResponse()
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "https://api.emercury.net/api-json.php")!,
+            statusCode: 500,
+            httpVersion: nil,
+            headerFields: nil
+        )
         
         let request = EmercuryRequest(method: "testMethod", parameters: [:])
         
         do {
-            let _: EmercuryResponse<StartAutomationResponse> = try await client.execute(request: request)
+            let _: StartAutomationResponse = try await client.execute(request: request)
             XCTFail("Expected error to be thrown")
         } catch let error as EmercuryError {
-            if case .invalidResponse = error {
-                // Success
+            if case .httpError(let statusCode) = error {
+                XCTAssertEqual(statusCode, 500)
             } else {
-                XCTFail("Expected invalidResponse error, got: \(error)")
+                XCTFail("Expected httpError, got: \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
+        }
+    }
+    
+    func testHTTPStatusCode401() async {
+        mockSession.data = Data()
+        mockSession.response = HTTPURLResponse(
+            url: URL(string: "https://api.emercury.net/api-json.php")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        
+        let request = EmercuryRequest(method: "testMethod", parameters: [:])
+        
+        do {
+            let _: StartAutomationResponse = try await client.execute(request: request)
+            XCTFail("Expected error to be thrown")
+        } catch let error as EmercuryError {
+            if case .httpError(let statusCode) = error {
+                XCTAssertEqual(statusCode, 401)
+            } else {
+                XCTFail("Expected httpError, got: \(error)")
             }
         } catch {
             XCTFail("Unexpected error type: \(error)")

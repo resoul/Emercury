@@ -37,6 +37,10 @@ public final class EmercuryClient {
         guard (200...299).contains(httpResponse.statusCode) else {
             throw EmercuryError.httpError(statusCode: httpResponse.statusCode)
         }
+        
+        if let s = String(data: data, encoding: .utf8) {
+            print("debug:", s)
+        }
 
         do {
             return try JSONDecoder().decode(EmercuryResponse<T>.self, from: data)

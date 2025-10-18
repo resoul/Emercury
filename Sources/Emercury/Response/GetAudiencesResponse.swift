@@ -8,7 +8,8 @@ public struct Audience: Decodable {
     let size: Int
     let subscribersCount: String
     let unsubscribed: String
-    let status: String
+    let status: Int
+    let isSegment: Int
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -17,5 +18,6 @@ public struct Audience: Decodable {
         case subscribersCount = "subscribers_count"
         case unsubscribed
         case status
+        case isSegment = "is_segment"
     }
 }

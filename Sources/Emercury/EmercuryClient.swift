@@ -53,7 +53,7 @@ public final class EmercuryClient {
         var urlRequest = URLRequest(url: baseURL)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        let jsonObject: [String: Any] = [
+        var jsonObject: [String: Any] = [
             "request": [
                 "parameters": request.parameters,
                 "method": request.method,
@@ -61,6 +61,12 @@ public final class EmercuryClient {
                 "API_key": apiKey
             ]
         ]
+        
+        if !request.parameters.isEmpty {
+            var requestDict = jsonObject["request"] as! [String: Any]
+            requestDict["parameters"] = request.parameters
+            jsonObject["request"] = requestDict
+        }
         
         let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: [])
         guard let jsonString = String(data: jsonData, encoding: .utf8) else {

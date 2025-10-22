@@ -1,13 +1,13 @@
 public struct GetTagsResponse: Decodable {
-    let automations: [Automation]
+    let tags: [Tag]
     
-    public struct Automation: Decodable {
-        let automationId: String
-        let automationName: String
+    public struct Tag: Decodable {
+        let tagId: String
+        let tagName: String
         
         enum CodingKeys: String, CodingKey {
-            case automationId = "automation_id"
-            case automationName = "automation_name"
+            case tagId = "tag_id"
+            case tagName = "tag_name"
         }
     }
 }

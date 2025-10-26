@@ -55,7 +55,6 @@ public final class EmercuryClient {
         urlRequest.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         var jsonObject: [String: Any] = [
             "request": [
-                "parameters": request.parameters,
                 "method": request.method,
                 "mail": email,
                 "API_key": apiKey

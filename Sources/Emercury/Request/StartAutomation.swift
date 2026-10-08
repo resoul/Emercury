@@ -1,6 +1,6 @@
 public extension EmercuryRequest {
     static func startAutomation(campaignID: String, email: String) -> EmercuryRequest {
-        var params: [String: String] = [
+        let params: [String: String] = [
             "campaign_id": campaignID,
             "email": email
         ]

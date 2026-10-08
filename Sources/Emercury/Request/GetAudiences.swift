@@ -1,6 +1,6 @@
 public extension EmercuryRequest {
     static func getAudiences(includeSegments: Bool = false) -> EmercuryRequest {
-        var params: [String: String] = [
+        let params: [String: String] = [
             "include_segments" : includeSegments ? "true" : "false"
         ]
 

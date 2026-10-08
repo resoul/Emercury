@@ -1,6 +1,6 @@
 public extension EmercuryRequest {
     static func getSubscribersByTag(audienceID: Int, tag: String) -> EmercuryRequest {
-        var params: [String: String] = [
+        let params: [String: String] = [
             "audience_id": "\(audienceID)",
             "tag": tag
         ]
